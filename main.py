@@ -16,10 +16,12 @@ async def say_hello(name: str):
 
 GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
 
-@app.get("/books/{book_name}")
-async def get_book(book_name: str, skip: int = 0, limit: int = 10):
+@app.get("/books/{search_string}")
+async def get_book(search_string: str, skip: int = 0, limit: int = 10):
+    query = search_string.replace(" ","+")
+
     params = {
-        "q": f"intitle:{book_name}",
+        "q": query,
         "startIndex": skip,
         "maxResults": limit
     }
