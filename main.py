@@ -17,9 +17,11 @@ async def say_hello(name: str):
 GOOGLE_BOOKS_API_URL = "https://www.googleapis.com/books/v1/volumes"
 
 @app.get("/books/{book_name}")
-async def get_book(book_name: str):
+async def get_book(book_name: str, skip: int = 0, limit: int = 10):
     params = {
-        "q": f"title:{book_name}",
+        "q": f"intitle:{book_name}",
+        "startIndex": skip,
+        "maxResults": limit
     }
 
     # params = f'intitle:${book_name}'
@@ -28,16 +30,23 @@ async def get_book(book_name: str):
         response = await client.get(GOOGLE_BOOKS_API_URL, params=params)
         data = response.json()
 
-        if "items" in data and data["items"]:
-            book_info = data["items"][0]["volumeInfo"]
-            title = book_info.get("title", "Unknown Title")
-            authors = book_info.get("authors", ["Unknown Author"])
-            description = book_info.get("description", "No description available")
+        books = []
 
-            images = book_info.get("imageLinks", [])
-            return {"title": title,
+        items = data["items"]
+        if "items" in data and data["items"]:
+            for item in data["items"]:
+                book_info = item["volumeInfo"]
+                title = book_info.get("title", "Unknown Title")
+                authors = book_info.get("authors", ["Unknown Author"])
+                description = book_info.get("description", "No description available")
+
+                images = book_info.get("imageLinks", [])
+
+                books.append({"title": title,
                     "authors": authors,
                     "description": description,
-                    "image_links": images}
+                    "image_links": images})
+
+            return books
         else:
             raise HTTPException(status_code=404, detail="Book not found")
