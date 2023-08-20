@@ -2,7 +2,8 @@ import json
 from unittest.mock import patch
 import httpx
 import pytest
-
+from fastapi import HTTPException
+import unittest
 import main
 
 
@@ -34,5 +35,16 @@ class TestBookSearchApi:
         mock_httpx_get.return_value = httpx.Response(200, content=json.dumps(response_ojb))
 
         result = await main.get_books("some keywords")
-        assert len(result) == 1
-        assert result[0].title == response_ojb["items"][0]["volumeInfo"].get("title", "")
+        assert result.total_items == response_ojb["totalItems"]
+        assert len(result.books) == len(response_ojb["items"])
+        assert result.books[0].title == response_ojb["items"][0]["volumeInfo"].get("title", "")
+
+    @pytest.mark.anyio
+    @patch("main.httpx.AsyncClient.get")
+    async def test_get_books_bad_response(self, mock_httpx_get):
+        mock_httpx_get.return_value = httpx.Response(400)
+
+        with pytest.raises(HTTPException) as err:
+            await main.get_books("some keywords")
+
+        assert err.value.status_code == 404
