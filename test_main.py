@@ -3,7 +3,6 @@ from unittest.mock import patch
 import httpx
 import pytest
 from fastapi import HTTPException
-import unittest
 import main
 
 
